@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#ffe9c9" />
+    <meta name="description" content="Drop squishy slimes, merge them, grow the King Goo." />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Slime Merge" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <title>Slime Merge</title>
+    <script type="module" crossorigin src="./assets/index-C3ipLa-g.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/dist-Btb5Jv1E.js">
+    <link rel="modulepreload" crossorigin href="./assets/preload-helper-BaNbYf_w.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-C910tgMz.css">
+  <link rel="manifest" href="./manifest.webmanifest"></head>
+  <body>
+    <main class="slime-app">
+      <header class="hud">
+        <div class="pill best" title="Best"><svg class="crown" viewBox="0 0 24 18" width="22" height="17" aria-hidden="true"><path d="M2 16 1 4l6 5 5-8 5 8 6-5-1 12z" fill="#ffc21a" stroke="#1b1a22" stroke-width="2" stroke-linejoin="round"/></svg><b id="best">0</b></div>
+        <div class="score" aria-live="polite"><b id="score">0</b><div id="level" class="level" aria-hidden="true"><i id="level-fill"></i></div></div>
+        <div class="hud-right">
+          <div class="next" aria-label="Next slime"><canvas id="next" aria-hidden="true"></canvas></div>
+          <button id="sound" class="sound" aria-label="Sound" aria-pressed="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="waves" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path class="mute" d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </header>
+      <section id="stage" class="stage">
+        <canvas id="jar" aria-label="Slime jar. Drag to aim, let go to drop."></canvas>
+        <div id="callout" class="callout" aria-live="polite"></div>
+        <div id="chip" class="chip" hidden></div>
+      </section>
+      <footer id="strip" class="strip" aria-label="Slimes found"></footer>
+      <div id="sheet" class="over" hidden role="dialog" aria-modal="true" aria-labelledby="card-title">
+        <div class="card" id="card"></div>
+      </div>
+    </main>
+  </body>
+</html>
