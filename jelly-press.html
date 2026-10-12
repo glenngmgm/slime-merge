@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Jelly Press</title>
-<meta name="description" content="Material Studies No. 009: a translucent watermelon jelly you can press, stretch and slice.">
+<meta name="description" content="Material Studies No. 009: a soft-body watermelon jelly game. Fill eight cutting orders by slicing exact portions.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -118,7 +118,52 @@ input[type="range"]::-webkit-slider-thumb {
 input[type="range"]::-moz-range-thumb {
   width: 12px; height: 12px; border-radius: 50%; background: var(--melon); border: 2px solid var(--paper); box-shadow: 0 0 0 1px var(--ink);
 }
-.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.actions { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
+.actions button.primary { grid-column: span 2; background: var(--melon); border-color: var(--melon); color: #fff; }
+.actions button.primary:hover { background: #bf2434; }
+.actions button:disabled { opacity: 0.4; cursor: default; }
+
+.modes { display: flex; gap: 16px; font: 500 11px/1 var(--font-data); letter-spacing: 0.12em; text-transform: uppercase; }
+.modes button {
+  appearance: none; border: 0; background: none; margin: 0; padding: 0 0 4px; cursor: pointer; font: inherit; letter-spacing: inherit;
+  color: var(--muted); border-bottom: 1px solid transparent;
+}
+.modes button[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--melon); }
+
+.ticket { display: grid; gap: 4px; padding-bottom: 2px; }
+.t-head { display: flex; justify-content: space-between; gap: 12px; font: 500 10.5px/1.2 var(--font-data); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.cuts { color: var(--ink); font-variant-numeric: tabular-nums; }
+.cuts i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-left: 4px; background: var(--melon); vertical-align: 0; }
+.cuts i.used { background: transparent; box-shadow: inset 0 0 0 1px var(--hair); }
+.ticket h2 { margin: 4px 0 0; font: italic 400 30px/1 var(--font-display); text-wrap: balance; }
+.ticket p { margin: 0; color: var(--muted); font-size: 13px; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.tags span { font: 500 10px/1 var(--font-data); letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 6px; border: 1px solid var(--hair); color: var(--ink); }
+.tags span.warn { border-color: var(--melon); color: var(--melon); }
+.result { display: grid; gap: 4px; margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--hair); }
+.score-line { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.acc { font: 500 26px/1 var(--font-data); font-variant-numeric: tabular-nums; }
+.stars { font-size: 20px; letter-spacing: 2px; color: var(--melon); }
+.stars .off { color: var(--hair); }
+.result p { color: var(--ink); }
+
+details.material { border-top: 1px solid var(--hair); padding-top: 10px; }
+details.material summary { cursor: pointer; font: 500 10.5px/1 var(--font-data); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+details.material .mat-body { display: grid; gap: 12px; margin-top: 12px; }
+.lock-note { margin: 0; font-size: 11.5px; color: var(--muted); }
+input[type="range"]:disabled { cursor: default; opacity: 0.55; }
+
+#labels { position: absolute; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+.plabel {
+  position: absolute; left: 0; top: 0; white-space: nowrap;
+  font: 500 11.5px/1 var(--font-data); font-variant-numeric: tabular-nums;
+  padding: 4px 6px; background: var(--paper-glass); border: 1px solid var(--hair); color: var(--ink);
+  transform: translate(-50%, -100%);
+}
+.plabel.hit { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.plabel.off { color: var(--melon); border-color: var(--melon); }
+body:not(.free) .free-only { display: none !important; }
+body.free .orders-only { display: none !important; }
 .actions button {
   appearance: none; margin: 0; cursor: pointer; background: transparent; color: var(--ink);
   border: 1px solid var(--hair); padding: 9px 8px;
@@ -160,12 +205,11 @@ body.no-gl .plate, body.no-gl .readout, body.no-gl .controls, body.no-gl .hint {
   .readout dd { font-size: 12px; }
   .readout .opt { display: none; }
   .scope { display: none; }
-  .controls { right: var(--gut); width: auto; padding: 12px; gap: 10px; grid-template-columns: 1fr 1fr; }
-  .controls .seg, .controls .actions { grid-column: 1 / -1; }
+  .controls { right: var(--gut); width: auto; padding: 12px; gap: 10px; }
+  .ticket h2 { font-size: 24px; }
+  .ticket p { font-size: 12px; }
+  .seg button { padding: 8px; }
   .hint { display: none; }
-}
-@media (max-width: 380px) {
-  .controls { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -181,6 +225,8 @@ body.no-gl .plate, body.no-gl .readout, body.no-gl .controls, body.no-gl .hint {
 
   <section class="readout" aria-label="Measurements">
     <dl>
+      <div class="orders-only"><dt>Score</dt><dd id="r-score">0<small>/ 800</small></dd></div>
+      <div class="orders-only opt"><dt>Best shift</dt><dd id="r-best">–</dd></div>
       <div><dt>Mass</dt><dd id="r-mass">–</dd></div>
       <div><dt>Volume</dt><dd id="r-vol">–</dd></div>
       <div class="opt"><dt>Δ Volume</dt><dd id="r-dv">–</dd></div>
@@ -193,23 +239,47 @@ body.no-gl .plate, body.no-gl .readout, body.no-gl .controls, body.no-gl .hint {
     </div>
   </section>
 
+  <div id="labels" aria-hidden="true"></div>
+
   <section class="controls" aria-label="Controls">
+    <div class="modes" role="group" aria-label="Mode">
+      <button id="m-orders" type="button" aria-pressed="true">Orders</button>
+      <button id="m-free" type="button" aria-pressed="false">Free play</button>
+    </div>
+    <div class="ticket orders-only" id="ticket" aria-live="polite">
+      <div class="t-head"><span id="t-num">Order 01 / 08</span><span id="t-cuts" class="cuts"></span></div>
+      <h2 id="t-name">Halves</h2>
+      <p id="t-brief"></p>
+      <div class="tags" id="t-tags"></div>
+      <div class="result" id="t-result" hidden>
+        <div class="score-line"><span id="t-acc" class="acc"></span><span id="t-stars" class="stars"></span></div>
+        <p id="t-detail"></p>
+      </div>
+    </div>
     <div class="seg" role="group" aria-label="Tool">
       <button id="t-press" type="button" aria-pressed="true">Press <kbd>P</kbd></button>
       <button id="t-knife" type="button" aria-pressed="false">Knife <kbd>K</kbd></button>
     </div>
-    <label class="slider" for="firm">
-      <span>Firmness</span><output id="firm-o" for="firm">40</output>
-      <input id="firm" type="range" min="0" max="100" value="40">
-    </label>
-    <label class="slider" for="damp">
-      <span>Internal damping</span><output id="damp-o" for="damp">25</output>
-      <input id="damp" type="range" min="0" max="100" value="25">
-    </label>
     <div class="actions">
+      <button id="primary" class="primary orders-only" type="button">Serve now</button>
+      <button id="reset" type="button">Retry</button>
       <button id="pause" type="button" aria-pressed="false">Pause</button>
-      <button id="reset" type="button">Reset</button>
     </div>
+    <details class="material" id="material">
+      <summary>Material</summary>
+      <div class="mat-body">
+        <p class="lock-note orders-only">Each order sets its own firmness and damping.</p>
+        <label class="slider" for="firm">
+          <span>Firmness</span><output id="firm-o" for="firm">40</output>
+          <input id="firm" type="range" min="0" max="100" value="40">
+        </label>
+        <label class="slider" for="damp">
+          <span>Internal damping</span><output id="damp-o" for="damp">25</output>
+          <input id="damp" type="range" min="0" max="100" value="25">
+        </label>
+        <div class="actions"><button id="sound" type="button" aria-pressed="true">Sound on</button></div>
+      </div>
+    </details>
   </section>
 
   <p class="hint" id="hint"></p>
@@ -743,7 +813,7 @@ function start() {
   }
 
   function makePiece(poly, idx, seedList, quat) {
-    const pc = { uid: uid++, poly, idx: Int32Array.from(idx), seeds: seedList, quat: quat.clone(), c: new Float64Array(3), fresh: 2 };
+    const pc = { uid: uid++, poly, area: polyArea(poly), idx: Int32Array.from(idx), seeds: seedList, quat: quat.clone(), c: new Float64Array(3), fresh: 2 };
     const n = pc.idx.length, p0 = P.p0;
     let cx = 0, cy = 0, cz = 0;
     for (const i of pc.idx) { cx += p0[i * 3]; cy += p0[i * 3 + 1]; cz += p0[i * 3 + 2]; P.owner[i] = pc.uid; }
@@ -835,10 +905,13 @@ function start() {
     }
     pieces.push(pc);
     restVolumeTotal = pieces.reduce((s, p) => s + p.restVol, 0);
+    areaTotal = pc.area;
+    massTotal = restVolumeTotal * UNIT_CM ** 3 * DENSITY;
     for (const p of pieces) { shapeMatch(p, 0, 0, false); deformPiece(p); }
     updateSeeds();
   }
-  let restVolumeTotal = 1;
+  let restVolumeTotal = 1, areaTotal = 1, massTotal = 1;
+  const pieceGrams = (pc) => massTotal * pc.area / areaTotal;
 
   // ---------------------------------------------------------------- simulation
   let firm = 0.4, damp = 0.25;
@@ -939,6 +1012,16 @@ function start() {
     const kd = 0.012 + 0.11 * firm;
     const gamma = 0.0005 + 0.03 * damp * damp;
     stats.dev = 0; stats.sag = 0; stats.n = 0;
+    if (game.tremor && game.state === 'playing') {
+      game.tremorT -= DT;
+      if (game.tremorT <= 0) {
+        // someone bumps the table
+        game.tremorT = 1.1 + Math.random() * 1.4;
+        const a = Math.random() * Math.PI * 2, m = 1.6 + Math.random() * 1.4;
+        for (let i = 0; i < n * 3; i += 3) { v[i] += Math.cos(a) * m; v[i + 1] += 1.4; v[i + 2] += Math.sin(a) * m; }
+        sfx.thud();
+      }
+    }
     for (let sub = 0; sub < SUB; sub++) {
       for (let i = 0; i < n * 3; i += 3) {
         s[i] = x[i]; s[i + 1] = x[i + 1]; s[i + 2] = x[i + 2];
@@ -1177,6 +1260,7 @@ function start() {
       return;
     }
     if (knifeActive()) {
+      if (!canCut()) { flashTicket(); return; }
       const p = new THREE.Vector3();
       if (onKnifePlane(p)) {
         action = { type: 'knife', a: p.clone(), b: p.clone() };
@@ -1241,14 +1325,15 @@ function start() {
           const i3 = action.ids[k] * 3, w = action.ws[k] * 7;
           P.v[i3] += action.dir.x * w; P.v[i3 + 1] += action.dir.y * w; P.v[i3 + 2] += action.dir.z * w;
         }
+        sfx.squish();
       }
       grab = null;
       canvas.style.cursor = 'grab';
     } else if (action.type === 'knife') {
       const { a, b } = action;
-      if (a.distanceTo(b) > 0.3) {
+      if (a.distanceTo(b) > 0.3 && canCut()) {
         const n = slice(a, b);
-        if (n) flashPieces();
+        if (n) { flashPieces(); sfx.cut(); onCut(); }
       }
       strokeFade = 1;
       knifeState.yTarget = H + 0.5;
@@ -1270,14 +1355,21 @@ function start() {
     mass: $('r-mass'), vol: $('r-vol'), dv: $('r-dv'), pieces: $('r-pieces'), strain: $('r-strain'),
     firm: $('firm'), firmO: $('firm-o'), damp: $('damp'), dampO: $('damp-o'),
     pause: $('pause'), reset: $('reset'), tPress: $('t-press'), tKnife: $('t-knife'), hint: $('hint'),
+    primary: $('primary'), sound: $('sound'), material: $('material'), score: $('r-score'), best: $('r-best'),
   };
   function setTool(t) {
     tool = t;
     ui.tPress.setAttribute('aria-pressed', String(t === 'press'));
     ui.tKnife.setAttribute('aria-pressed', String(t === 'knife'));
-    ui.hint.innerHTML = t === 'press'
-      ? '<b>Drag</b> the jelly to press and stretch it. <b>Click</b> to poke. Drag the table to turn it. Hold <b>Shift</b> to slice.'
-      : '<b>Draw a line</b> across the jelly to slice it. Every piece keeps its own wobble. Right-drag turns the table.';
+    if (game.mode === 'orders') {
+      ui.hint.innerHTML = t === 'press'
+        ? '<b>Drag</b> a piece to nudge it into place before you cut. Drag the table to turn it.'
+        : '<b>Draw a line</b> across the jelly to cut. Cuts are final, and the labels show what each portion weighs. Right-drag turns the table.';
+    } else {
+      ui.hint.innerHTML = t === 'press'
+        ? '<b>Drag</b> the jelly to press and stretch it. <b>Click</b> to poke. Drag the table to turn it. Hold <b>Shift</b> to slice.'
+        : '<b>Draw a line</b> across the jelly to slice it. Every piece keeps its own wobble. Right-drag turns the table.';
+    }
     canvas.style.cursor = t === 'knife' ? 'crosshair' : 'default';
   }
   function setPaused(p) {
@@ -1288,7 +1380,18 @@ function start() {
   ui.tPress.addEventListener('click', () => setTool('press'));
   ui.tKnife.addEventListener('click', () => setTool('knife'));
   ui.pause.addEventListener('click', () => setPaused(!paused));
-  ui.reset.addEventListener('click', () => { buildWorld(); trace.fill(0); });
+  ui.reset.addEventListener('click', () => {
+    if (game.mode === 'free') { buildWorld(); trace.fill(0); }
+    else if (game.state !== 'final') startOrder(game.idx);
+  });
+  ui.primary.addEventListener('click', primaryAction);
+  ui.sound.addEventListener('click', () => {
+    sfx.on = !sfx.on;
+    ui.sound.textContent = sfx.on ? 'Sound on' : 'Sound off';
+    ui.sound.setAttribute('aria-pressed', String(sfx.on));
+  });
+  $('m-orders').addEventListener('click', () => { if (game.mode !== 'orders') setMode('orders'); });
+  $('m-free').addEventListener('click', () => { if (game.mode !== 'free') setMode('free'); });
   ui.firm.addEventListener('input', () => { firm = ui.firm.value / 100; ui.firmO.textContent = ui.firm.value; });
   ui.damp.addEventListener('input', () => { damp = ui.damp.value / 100; ui.dampO.textContent = ui.damp.value; });
   firm = ui.firm.value / 100; ui.firmO.textContent = ui.firm.value;
@@ -1302,7 +1405,8 @@ function start() {
     if (k === 'k') setTool('knife');
     else if (k === 'p') setTool('press');
     else if (k === ' ' && tag !== 'BUTTON') { e.preventDefault(); setPaused(!paused); }
-    else if (k === 'r') { buildWorld(); trace.fill(0); }
+    else if (k === 'r') ui.reset.click();
+    else if (k === 'enter' && tag !== 'BUTTON' && game.mode === 'orders') primaryAction();
   });
   window.addEventListener('keyup', (e) => { if (e.key === 'Shift') shiftHeld = false; });
   window.addEventListener('blur', () => { shiftHeld = false; });
@@ -1353,6 +1457,268 @@ function start() {
     ui.strain.innerHTML = strain.toFixed(1) + '<small>%</small>';
   }
 
+
+  // ---------------------------------------------------------------- sound
+  const sfx = (() => {
+    let ctx = null;
+    const api = { on: true };
+    function ac() {
+      if (!api.on) return null;
+      if (!ctx) {
+        try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { api.on = false; return null; }
+      }
+      if (ctx.state === 'suspended') ctx.resume();
+      return ctx;
+    }
+    function tone(c, t, f0, f1, dur, vol, type = 'sine') {
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(f0, t);
+      o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g).connect(c.destination);
+      o.start(t); o.stop(t + dur + 0.02);
+    }
+    api.cut = () => {
+      const c = ac(); if (!c) return;
+      const t = c.currentTime, dur = 0.24;
+      const buf = c.createBuffer(1, Math.ceil(c.sampleRate * dur), c.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      const src = c.createBufferSource(); src.buffer = buf;
+      const f = c.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 2.5;
+      f.frequency.setValueAtTime(2800, t); f.frequency.exponentialRampToValueAtTime(450, t + dur);
+      const g = c.createGain();
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.3, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      src.connect(f).connect(g).connect(c.destination);
+      src.start(t); src.stop(t + dur);
+      tone(c, t + 0.05, 190, 70, 0.2, 0.22);
+    };
+    api.squish = () => { const c = ac(); if (c) tone(c, c.currentTime, 220, 80, 0.18, 0.2); };
+    api.thud = () => { const c = ac(); if (c) tone(c, c.currentTime, 90, 38, 0.3, 0.3, 'triangle'); };
+    api.chime = (stars) => {
+      const c = ac(); if (!c) return;
+      const notes = stars ? [523.25, 659.25, 783.99].slice(0, stars) : [196];
+      notes.forEach((f, i) => tone(c, c.currentTime + i * 0.12, f, f * 1.002, 0.5, 0.16, 'triangle'));
+    };
+    return api;
+  })();
+
+  // ---------------------------------------------------------------- orders (the game)
+  const ORDERS = [
+    { name: 'Halves', brief: 'Cut the slice into 2 equal portions.', kind: 'equal', n: 2, cuts: 1, firm: 0.4, damp: 0.3 },
+    { name: 'Thirds', brief: 'Three equal portions.', kind: 'equal', n: 3, cuts: 2, firm: 0.4, damp: 0.3 },
+    { name: 'The 100 g slice', brief: 'Cut off one portion that weighs 100 g.', kind: 'target', grams: 100, cuts: 1, firm: 0.45, damp: 0.3 },
+    { name: 'Quarters', brief: 'Four equal portions from two cuts. One stroke can pass through several pieces.', kind: 'equal', n: 4, cuts: 2, firm: 0.4, damp: 0.3 },
+    { name: 'Seed count', brief: 'Cut out a portion holding exactly 6 seeds.', kind: 'seeds', seeds: 6, cuts: 2, firm: 0.4, damp: 0.3 },
+    { name: 'Soft-set sixths', brief: 'Six equal portions from a barely set jelly.', kind: 'equal', n: 6, cuts: 3, firm: 0.12, damp: 0.12 },
+    { name: 'Trembling table', brief: 'Five equal portions while the table keeps getting bumped.', kind: 'equal', n: 5, cuts: 4, firm: 0.35, damp: 0.2, tremor: true },
+    { name: 'The 50 g taster', brief: 'One 50 g portion, cut from a soft jelly on a shaky table.', kind: 'target', grams: 50, cuts: 2, firm: 0.18, damp: 0.14, tremor: true },
+  ];
+  const MAX_SCORE = ORDERS.length * 100;
+  const game = { mode: 'orders', idx: 0, state: 'playing', cutsLeft: 0, scores: [], settleT: 0, tremor: false, tremorT: 2, result: null };
+  let best = 0;
+  try { best = Number(localStorage.getItem('jellypress.best')) || 0; } catch (e) { /* storage unavailable */ }
+  const pad = (n) => String(n).padStart(2, '0');
+  const total = () => game.scores.reduce((a, b) => a + (b || 0), 0);
+
+  function canCut() {
+    return game.mode === 'free' || (game.state === 'playing' && game.cutsLeft > 0);
+  }
+  function flashTicket() {
+    const t = $('ticket');
+    t.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(0)' }], { duration: 220 });
+  }
+  function setMaterial(f, d) {
+    firm = f; damp = d;
+    ui.firm.value = Math.round(f * 100); ui.firmO.textContent = ui.firm.value;
+    ui.damp.value = Math.round(d * 100); ui.dampO.textContent = ui.damp.value;
+  }
+  function setMode(m) {
+    game.mode = m;
+    document.body.classList.toggle('free', m === 'free');
+    $('m-orders').setAttribute('aria-pressed', String(m === 'orders'));
+    $('m-free').setAttribute('aria-pressed', String(m === 'free'));
+    ui.firm.disabled = ui.damp.disabled = m === 'orders';
+    ui.reset.textContent = m === 'orders' ? 'Retry' : 'Reset';
+    ui.reset.hidden = false;
+    if (m === 'orders') {
+      ui.material.open = false;
+      game.scores = [];
+      startOrder(0);
+    } else {
+      game.state = 'free'; game.tremor = false; game.result = null;
+      ui.material.open = window.matchMedia('(min-width: 761px)').matches;
+      setMaterial(0.4, 0.25);
+      buildWorld(); trace.fill(0);
+      setTool('press');
+    }
+    updateScore();
+  }
+  function startOrder(i) {
+    const o = ORDERS[i];
+    game.idx = i; game.state = 'playing'; game.cutsLeft = o.cuts;
+    game.tremor = !!o.tremor; game.tremorT = 2.2; game.result = null;
+    setMaterial(o.firm, o.damp);
+    buildWorld(); trace.fill(0);
+    setTool('knife');
+    renderTicket();
+  }
+  function onCut() {
+    if (game.mode !== 'orders' || game.state !== 'playing') return;
+    game.cutsLeft--;
+    const o = ORDERS[game.idx];
+    // for equal portions, extra pieces can only hurt, so serve as soon as the count is reached
+    if (game.cutsLeft <= 0 || (o.kind === 'equal' && pieces.length >= o.n)) serve(1.2);
+    renderTicket();
+  }
+  function serve(delay) {
+    game.state = 'settling';
+    game.settleT = delay;
+    renderTicket();
+  }
+  function primaryAction() {
+    if (game.mode !== 'orders') return;
+    if (game.state === 'playing') { if (pieces.length > 1) serve(0.3); }
+    else if (game.state === 'result') {
+      if (game.idx < ORDERS.length - 1) startOrder(game.idx + 1);
+      else finishShift();
+    } else if (game.state === 'final') { game.scores = []; updateScore(); startOrder(0); }
+  }
+  function evaluateOrder() {
+    const o = ORDERS[game.idx];
+    const ms = pieces.map((pc) => ({ pc, g: pieceGrams(pc), seeds: pc.seeds.length }));
+    let score = 0, detail = '', hit = null, target = 0;
+    if (o.kind === 'equal') {
+      target = massTotal / o.n;
+      const gs = ms.map((m) => m.g).sort((a, b) => b - a);
+      let err = 0;
+      for (let i = 0; i < Math.max(o.n, gs.length); i++) err += i < o.n ? Math.abs((gs[i] || 0) - target) : gs[i];
+      score = 100 * (1 - 2.5 * err / massTotal);
+      detail = (gs.length !== o.n ? `${gs.length} portions instead of ${o.n}. ` : '') +
+        `Largest ${gs[0].toFixed(1)} g, smallest ${gs[gs.length - 1].toFixed(1)} g, target ${target.toFixed(1)} g.`;
+    } else if (o.kind === 'target') {
+      let b = ms[0];
+      for (const m of ms) if (Math.abs(m.g - o.grams) < Math.abs(b.g - o.grams)) b = m;
+      hit = b.pc; target = o.grams;
+      score = 100 * (1 - 2.5 * Math.abs(b.g - o.grams) / o.grams);
+      detail = `Closest portion weighs ${b.g.toFixed(1)} g, ${Math.abs(b.g - o.grams).toFixed(1)} g off.`;
+    } else {
+      let b = ms[0];
+      for (const m of ms) if (Math.abs(m.seeds - o.seeds) < Math.abs(b.seeds - o.seeds)) b = m;
+      hit = b.pc;
+      const d = Math.abs(b.seeds - o.seeds);
+      score = [100, 70, 40, 15][d] || 0;
+      detail = d === 0 ? `One portion holds exactly ${o.seeds} seeds.` : `Closest portion holds ${b.seeds} seeds.`;
+    }
+    score = Math.max(0, Math.min(100, score));
+    if (pieces.length < 2) { score = 0; detail = 'Nothing was cut.'; }
+    const pts = Math.round(score);
+    const stars = score >= 92 ? 3 : score >= 80 ? 2 : score >= 60 ? 1 : 0;
+    game.scores[game.idx] = pts;
+    game.result = { pts, stars, detail, hit, target, kind: o.kind };
+    game.state = 'result';
+    sfx.chime(stars);
+    updateScore();
+    renderTicket();
+  }
+  function finishShift() {
+    const t = total();
+    game.newBest = t > best;
+    if (game.newBest) {
+      best = t;
+      try { localStorage.setItem('jellypress.best', String(best)); } catch (e) { /* storage unavailable */ }
+    }
+    game.state = 'final';
+    updateScore();
+    renderTicket();
+  }
+  function starHTML(n) {
+    return '★'.repeat(n) + '<span class="off">' + '★'.repeat(3 - n) + '</span>';
+  }
+  function renderTicket() {
+    const res = $('t-result');
+    if (game.state === 'final') {
+      $('t-num').textContent = 'Shift complete';
+      $('t-cuts').innerHTML = '';
+      $('t-name').textContent = `${total()} of ${MAX_SCORE} points`;
+      $('t-brief').textContent = game.newBest ? 'A new best shift.' : `Your best shift is ${best} points.`;
+      $('t-tags').innerHTML = ORDERS.map((o, i) => `<span>${pad(i + 1)} · ${game.scores[i] || 0}</span>`).join('');
+      res.hidden = true;
+      ui.primary.textContent = 'Play again';
+      ui.primary.disabled = false;
+      ui.reset.hidden = true;
+      return;
+    }
+    ui.reset.hidden = false;
+    const o = ORDERS[game.idx];
+    $('t-num').textContent = `Order ${pad(game.idx + 1)} / ${pad(ORDERS.length)}`;
+    let dots = '';
+    for (let k = 0; k < o.cuts; k++) dots += `<i class="${k < game.cutsLeft ? '' : 'used'}"></i>`;
+    $('t-cuts').innerHTML = `${game.cutsLeft} ${game.cutsLeft === 1 ? 'cut' : 'cuts'} left${dots}`;
+    $('t-name').textContent = o.name;
+    $('t-brief').textContent = o.brief;
+    const tags = [];
+    if (o.kind === 'equal') tags.push(`<span>${(massTotal / o.n).toFixed(1)} g each</span>`);
+    if (o.kind === 'target') tags.push(`<span>Target ${o.grams} g</span>`);
+    if (o.kind === 'seeds') tags.push(`<span>${o.seeds} seeds</span>`);
+    if (o.firm < 0.25) tags.push('<span class="warn">Soft set</span>');
+    if (o.tremor) tags.push('<span class="warn">Table bumps</span>');
+    $('t-tags').innerHTML = tags.join('');
+    if (game.state === 'result') {
+      const r = game.result;
+      res.hidden = false;
+      $('t-acc').textContent = `+${r.pts}`;
+      $('t-stars').innerHTML = starHTML(r.stars);
+      $('t-stars').setAttribute('aria-label', `${r.stars} of 3 stars`);
+      $('t-detail').textContent = r.detail;
+      ui.primary.textContent = game.idx < ORDERS.length - 1 ? 'Next order' : 'Finish shift';
+      ui.primary.disabled = false;
+    } else {
+      res.hidden = true;
+      ui.primary.textContent = game.state === 'settling' ? 'Weighing…' : 'Serve now';
+      ui.primary.disabled = game.state === 'settling' || pieces.length < 2;
+    }
+  }
+  function updateScore() {
+    ui.score.innerHTML = `${total()}<small>/ ${MAX_SCORE}</small>`;
+    ui.best.textContent = best ? String(best) : '–';
+  }
+
+  // portion labels floating over each piece
+  const labelLayer = $('labels');
+  const labelEls = [];
+  const lv = new THREE.Vector3();
+  function updateLabels() {
+    let k = 0;
+    if (pieces.length > 1) {
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      const o = game.mode === 'orders' && game.state !== 'final' ? ORDERS[game.idx] : null;
+      const r = game.state === 'result' ? game.result : null;
+      for (const pc of pieces) {
+        let el = labelEls[k];
+        if (!el) { el = document.createElement('div'); el.className = 'plabel'; labelLayer.appendChild(el); labelEls.push(el); }
+        k++;
+        lv.set(pc.c[0], pc.c[1] + H * 0.5 + 0.22, pc.c[2]).project(camera);
+        if (lv.z > 1) { el.hidden = true; continue; }
+        el.hidden = false;
+        el.style.transform = `translate(${((lv.x * 0.5 + 0.5) * w).toFixed(1)}px, ${((-lv.y * 0.5 + 0.5) * h).toFixed(1)}px) translate(-50%, -100%)`;
+        const g = pieceGrams(pc);
+        const text = o && o.kind === 'seeds' ? `${pc.seeds.length} ${pc.seeds.length === 1 ? 'seed' : 'seeds'}` : `${g.toFixed(1)} g`;
+        if (el.textContent !== text) el.textContent = text;
+        let cls = 'plabel';
+        if (r) {
+          if (r.kind === 'equal') cls += Math.abs(g - r.target) / r.target <= 0.06 ? ' hit' : ' off';
+          else if (pc === r.hit) cls += ' hit';
+        }
+        if (el.className !== cls) el.className = cls;
+      }
+    }
+    for (; k < labelEls.length; k++) labelEls[k].hidden = true;
+  }
+
   // ---------------------------------------------------------------- frame loop
   function resize() {
     const w = window.innerWidth, h = window.innerHeight;
@@ -1365,8 +1731,7 @@ function start() {
   }
   window.addEventListener('resize', resize);
   resize();
-  setTool('press');
-  buildWorld();
+  setMode('orders');
 
   let last = performance.now(), acc = 0, sagMean = 0;
   function loop(now) {
@@ -1409,6 +1774,8 @@ function start() {
       if (strokeFade <= 0) strokeLine.visible = false;
     }
     if (piecesFlash > 0) piecesFlash -= dt * 1.2;
+    if (game.state === 'settling') { game.settleT -= dt; if (game.settleT <= 0) evaluateOrder(); }
+    updateLabels();
 
     if (++frame % 4 === 0) { updateReadouts(); drawScope(); }
     renderer.render(scene, camera);
