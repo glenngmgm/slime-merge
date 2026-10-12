@@ -1,0 +1,1421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jelly Press</title>
+<meta name="description" content="Material Studies No. 009: a translucent watermelon jelly you can press, stretch and slice.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: full-bleed 3D specimen table; editorial plate top-left, instrument readouts top-right, control card bottom-left. One deliberate light look. */
+:root {
+  --paper: #e4e8e1;      /* cool sage specimen paper */
+  --paper-glass: rgba(236, 240, 233, 0.84);
+  --ink: #1d2a21;        /* deep rind green-black */
+  --muted: #5f6d62;
+  --hair: rgba(29, 42, 33, 0.2);
+  --melon: #d8303f;      /* flesh red, used sparingly */
+  --rind: #cfe2b4;
+  --font-display: "Instrument Serif", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-ui: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --gut: 24px;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font: 14px/1.45 var(--font-ui);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+#stage { position: fixed; inset: 0; overflow: hidden; }
+#gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
+
+.plate, .readout, .controls, .hint { position: absolute; z-index: 2; }
+.plate {
+  top: calc(env(safe-area-inset-top, 0px) + var(--gut));
+  left: var(--gut);
+  max-width: 340px;
+  pointer-events: none;
+}
+.eyebrow {
+  margin: 0;
+  font: 500 11px/1 var(--font-data);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.eyebrow b { color: var(--melon); font-weight: 500; }
+h1 {
+  margin: 10px 0 6px;
+  font: italic 400 clamp(44px, 6vw, 76px)/0.9 var(--font-display);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.sub { margin: 0; max-width: 34ch; color: var(--muted); font-size: 13px; }
+
+.readout {
+  top: calc(env(safe-area-inset-top, 0px) + var(--gut));
+  right: var(--gut);
+  width: 232px;
+  pointer-events: none;
+  font-family: var(--font-data);
+}
+.readout dl { margin: 0; display: grid; grid-template-columns: 1fr; }
+.readout dl > div {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  padding: 7px 0;
+  border-top: 1px solid var(--hair);
+}
+.readout dl > div:last-child { border-bottom: 1px solid var(--hair); }
+.readout dt { font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.readout dd { margin: 0; font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.readout dd small { color: var(--muted); font-size: 10.5px; margin-left: 3px; }
+.scope { margin-top: 12px; }
+#scope { display: block; width: 100%; height: 44px; }
+.scope p { margin: 4px 0 0; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; }
+
+.controls {
+  left: var(--gut);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--gut));
+  width: 300px;
+  padding: 16px 16px 14px;
+  background: var(--paper-glass);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--hair);
+  display: grid;
+  gap: 14px;
+}
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--ink); }
+.seg button {
+  appearance: none; border: 0; margin: 0; background: transparent; color: var(--ink);
+  font: 500 12px/1 var(--font-ui); letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 10px 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.seg button + button { border-left: 1px solid var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.seg kbd { font: 400 10px/1 var(--font-data); opacity: 0.6; }
+
+.slider { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: baseline; }
+.slider span { font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-family: var(--font-data); }
+.slider output { font: 500 12px/1 var(--font-data); font-variant-numeric: tabular-nums; }
+.slider input { grid-column: 1 / -1; }
+input[type="range"] {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 22px; margin: 0; background: transparent; cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track { height: 1px; background: var(--ink); }
+input[type="range"]::-moz-range-track { height: 1px; background: var(--ink); }
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 16px; height: 16px; margin-top: -7.5px; border-radius: 50%;
+  background: var(--melon); border: 2px solid var(--paper); box-shadow: 0 0 0 1px var(--ink);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 12px; height: 12px; border-radius: 50%; background: var(--melon); border: 2px solid var(--paper); box-shadow: 0 0 0 1px var(--ink);
+}
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.actions button {
+  appearance: none; margin: 0; cursor: pointer; background: transparent; color: var(--ink);
+  border: 1px solid var(--hair); padding: 9px 8px;
+  font: 500 12px/1 var(--font-ui); letter-spacing: 0.08em; text-transform: uppercase;
+}
+.actions button:hover, .seg button:hover:not([aria-pressed="true"]) { background: rgba(29, 42, 33, 0.07); }
+.actions button[aria-pressed="true"] { border-color: var(--melon); color: var(--melon); }
+button:focus-visible, input:focus-visible, #gl:focus-visible { outline: 2px solid var(--melon); outline-offset: 2px; }
+
+.hint {
+  right: var(--gut);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--gut));
+  max-width: 290px;
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+  pointer-events: none;
+  text-align: right;
+}
+.hint b { color: var(--ink); font-weight: 600; }
+
+#fallback {
+  position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 24px 16px;
+  background: var(--paper);
+}
+#fallback .card { max-width: 440px; border-top: 1px solid var(--ink); padding-top: 18px; }
+#fallback h2 { font: italic 400 40px/1 var(--font-display); margin: 10px 0 12px; }
+#fallback p { margin: 0 0 10px; color: var(--muted); }
+#fallback .why { color: var(--ink); }
+body.no-gl .plate, body.no-gl .readout, body.no-gl .controls, body.no-gl .hint { display: none; }
+[hidden] { display: none !important; }
+
+@media (max-width: 760px) {
+  :root { --gut: 16px; }
+  h1 { font-size: 34px; margin: 6px 0 2px; }
+  .sub { display: none; }
+  .readout { width: 128px; }
+  .readout dl > div { padding: 5px 0; }
+  .readout dd { font-size: 12px; }
+  .readout .opt { display: none; }
+  .scope { display: none; }
+  .controls { right: var(--gut); width: auto; padding: 12px; gap: 10px; grid-template-columns: 1fr 1fr; }
+  .controls .seg, .controls .actions { grid-column: 1 / -1; }
+  .hint { display: none; }
+}
+@media (max-width: 380px) {
+  .controls { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<main id="stage">
+  <canvas id="gl" tabindex="0" aria-label="Interactive 3D watermelon jelly. Drag to press it, use the knife to slice it."></canvas>
+
+  <header class="plate">
+    <p class="eyebrow">Material Studies <b>/</b> No. 009</p>
+    <h1>Melon Jelly</h1>
+    <p class="sub">Watermelon set in 2% agar. A half-disc slab 20&nbsp;cm across and 3&nbsp;cm thick, studied for wobble and cut.</p>
+  </header>
+
+  <section class="readout" aria-label="Measurements">
+    <dl>
+      <div><dt>Mass</dt><dd id="r-mass">–</dd></div>
+      <div><dt>Volume</dt><dd id="r-vol">–</dd></div>
+      <div class="opt"><dt>Δ Volume</dt><dd id="r-dv">–</dd></div>
+      <div><dt>Pieces</dt><dd id="r-pieces">–</dd></div>
+      <div class="opt"><dt>Strain</dt><dd id="r-strain">–</dd></div>
+    </dl>
+    <div class="scope">
+      <canvas id="scope" aria-hidden="true"></canvas>
+      <p><span>Wobble trace</span><span>4 s</span></p>
+    </div>
+  </section>
+
+  <section class="controls" aria-label="Controls">
+    <div class="seg" role="group" aria-label="Tool">
+      <button id="t-press" type="button" aria-pressed="true">Press <kbd>P</kbd></button>
+      <button id="t-knife" type="button" aria-pressed="false">Knife <kbd>K</kbd></button>
+    </div>
+    <label class="slider" for="firm">
+      <span>Firmness</span><output id="firm-o" for="firm">40</output>
+      <input id="firm" type="range" min="0" max="100" value="40">
+    </label>
+    <label class="slider" for="damp">
+      <span>Internal damping</span><output id="damp-o" for="damp">25</output>
+      <input id="damp" type="range" min="0" max="100" value="25">
+    </label>
+    <div class="actions">
+      <button id="pause" type="button" aria-pressed="false">Pause</button>
+      <button id="reset" type="button">Reset</button>
+    </div>
+  </section>
+
+  <p class="hint" id="hint"></p>
+
+  <div id="fallback" hidden role="alert">
+    <div class="card">
+      <p class="eyebrow">Material Studies <b>/</b> No. 009</p>
+      <h2>This study needs WebGL</h2>
+      <p class="why">Your browser or device has WebGL turned off, or does not support it.</p>
+      <p>Open this page in a current version of Chrome, Edge, Firefox or Safari. If you already do, turn on hardware acceleration in the browser settings and reload.</p>
+    </div>
+  </div>
+</main>
+
+<script>
+  window.showJellyFallback = function (msg) {
+    var f = document.getElementById('fallback');
+    if (!f) return;
+    if (msg) f.querySelector('.why').textContent = msg;
+    f.hidden = false;
+    document.body.classList.add('no-gl');
+  };
+  setTimeout(function () {
+    if (!window.__jellyBooted) window.showJellyFallback('The 3D engine did not load. Check your connection and reload the page.');
+  }, 9000);
+</script>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+window.__jellyBooted = true;
+
+function hasWebGL() {
+  try {
+    const c = document.createElement('canvas');
+    return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl')));
+  } catch (e) { return false; }
+}
+
+if (!hasWebGL()) {
+  window.showJellyFallback();
+} else {
+  try { start(); } catch (err) {
+    console.error(err);
+    window.showJellyFallback('WebGL is available, but the scene could not start (' + err.message + ').');
+  }
+}
+
+function start() {
+  const $ = (id) => document.getElementById(id);
+
+  // ---------------------------------------------------------------- constants
+  // 1 world unit = 5 cm.
+  const R = 2.0;            // slice radius (10 cm)
+  const H = 0.62;           // slab thickness (3.1 cm)
+  const HS = 0.2;           // particle spacing in plan
+  const NY = 4;             // particle layers
+  const HY = H / (NY - 1);
+  const RIND = 0.27;        // distance from skin where flesh turns to rind
+  const SKIN = 0.085;       // green skin thickness
+  const BEVEL = 0.075;
+  const UNIT_CM = 5, DENSITY = 1.03; // g/cm³, agar jelly
+  const DT = 1 / 60, SUB = 5, SDT = DT / SUB;
+  const GRAV = 28;
+  const K_SKIN = 6, SKIN_SIG2 = (0.6 * HS) ** 2;
+  const COLL_R = 0.86 * HS;
+  const TABLE_R = 6.4;
+  const MAX_PIECES = 36;
+  const KNIFE_Y = H * 0.55;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------------------------------------------------------------- renderer
+  const canvas = $('gl');
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  } catch (e) {
+    window.showJellyFallback('WebGL is listed by your browser but refused to start a context.');
+    return;
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  canvas.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault();
+    window.showJellyFallback('The graphics context was lost. Reload the page to continue.');
+  });
+
+  const BG = new THREE.Color('#e4e8e1');
+  const scene = new THREE.Scene();
+  scene.background = BG;
+  scene.fog = new THREE.Fog(BG, 13, 26);
+
+  const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
+  const orbit = { theta: -0.38, phi: 0.82, radius: 10, zoom: 1, target: new THREE.Vector3(0, 0.15, 0.1) };
+  function updateCamera() {
+    const r = orbit.radius * orbit.zoom;
+    const t = orbit.target;
+    camera.position.set(
+      t.x + r * Math.cos(orbit.phi) * Math.sin(orbit.theta),
+      t.y + r * Math.sin(orbit.phi),
+      t.z + r * Math.cos(orbit.phi) * Math.cos(orbit.theta));
+    camera.lookAt(t);
+  }
+
+  // lights
+  const hemi = new THREE.HemisphereLight(0xf4f7f0, 0x9aa596, 1.15);
+  scene.add(hemi);
+  const sun = new THREE.DirectionalLight(0xffffff, 2.1);
+  sun.position.set(-3.5, 8, 4.5);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = -6; sun.shadow.camera.right = 6;
+  sun.shadow.camera.top = 6; sun.shadow.camera.bottom = -6;
+  sun.shadow.camera.near = 1; sun.shadow.camera.far = 20;
+  sun.shadow.radius = 6;
+  sun.shadow.bias = -0.0006;
+  scene.add(sun);
+  const lightDir = sun.position.clone().normalize();
+
+  // cutting mat
+  function matTexture() {
+    const S = 2048, span = 14, ppu = S / span;
+    const c = document.createElement('canvas'); c.width = c.height = S;
+    const g = c.getContext('2d');
+    g.fillStyle = '#d6dccf'; g.fillRect(0, 0, S, S);
+    for (let i = 0; i <= span / 0.2; i++) {
+      const p = Math.round(i * 0.2 * ppu) + 0.5;
+      const major = i % 5 === 0;
+      g.strokeStyle = major ? 'rgba(70,88,72,0.32)' : 'rgba(70,88,72,0.13)';
+      g.lineWidth = major ? 2 : 1;
+      g.beginPath(); g.moveTo(p, 0); g.lineTo(p, S); g.stroke();
+      g.beginPath(); g.moveTo(0, p); g.lineTo(S, p); g.stroke();
+    }
+    g.fillStyle = 'rgba(70,88,72,0.45)';
+    g.font = '500 18px "IBM Plex Mono", monospace';
+    for (let i = 5; i < span / 0.2; i += 5) {
+      const p = i * 0.2 * ppu;
+      g.fillText(String(i), p + 5, 22);
+      g.fillText(String(i), 6, p - 5);
+    }
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return tex;
+  }
+  const FLOOR = 42;
+  const matTex = matTexture();
+  matTex.repeat.set(FLOOR / 14, FLOOR / 14);
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(FLOOR, FLOOR),
+    new THREE.MeshLambertMaterial({ map: matTex }));
+  floor.rotation.x = -Math.PI / 2;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  // ---------------------------------------------------------------- jelly shader
+  const jellyMat = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    uniforms: {
+      uFlesh: { value: new THREE.Color('#f0384a') },
+      uFleshDeep: { value: new THREE.Color('#c0172e') },
+      uFleshPale: { value: new THREE.Color('#ff9a9a') },
+      uRind: { value: new THREE.Color('#e3f0cc') },
+      uSkin: { value: new THREE.Color('#1d4a22') },
+      uSkinLight: { value: new THREE.Color('#5f8f3a') },
+      uSky: { value: new THREE.Color('#f6f8f2') },
+      uGround: { value: new THREE.Color('#a8b2a2') },
+      uLightDir: { value: lightDir },
+      uR: { value: R }, uRindW: { value: RIND }, uSkinW: { value: SKIN },
+    },
+    vertexShader: /* glsl */`
+      attribute vec3 aRest;
+      varying vec3 vRest;
+      varying vec3 vN;
+      varying vec3 vW;
+      void main() {
+        vRest = aRest;
+        vN = normalize(mat3(modelMatrix) * normal);
+        vec4 w = modelMatrix * vec4(position, 1.0);
+        vW = w.xyz;
+        gl_Position = projectionMatrix * viewMatrix * w;
+      }`,
+    fragmentShader: /* glsl */`
+      uniform vec3 uFlesh, uFleshDeep, uFleshPale, uRind, uSkin, uSkinLight, uSky, uGround, uLightDir;
+      uniform float uR, uRindW, uSkinW;
+      varying vec3 vRest;
+      varying vec3 vN;
+      varying vec3 vW;
+      float hash(vec3 p) {
+        p = fract(p * 0.3183099 + 0.1);
+        p *= 17.0;
+        return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+      }
+      float noise(vec3 x) {
+        vec3 i = floor(x), f = fract(x);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(mix(hash(i), hash(i + vec3(1,0,0)), f.x),
+                       mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
+                   mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
+                       mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y), f.z);
+      }
+      void main() {
+        vec3 N = normalize(vN);
+        if (!gl_FrontFacing) N = -N;
+        vec3 V = normalize(cameraPosition - vW);
+        vec3 L = normalize(uLightDir);
+
+        float r = length(vRest.xz);
+        float edge = uR - r;
+        float ang = atan(vRest.z, vRest.x);
+
+        // crystalline flesh grain
+        float g = noise(vRest * 15.0) * 0.6 + noise(vRest * 43.0) * 0.4;
+        vec3 flesh = mix(uFleshDeep, uFlesh, smoothstep(0.25, 0.8, g));
+        flesh = mix(flesh, uFleshPale, smoothstep(uRindW + 0.2, uRindW - 0.01, edge) * 0.7);
+        float tR = smoothstep(uRindW + 0.015, uRindW - 0.05, edge);
+        float st = sin(ang * 24.0 + 2.4 * sin(ang * 7.0) + noise(vRest * vec3(4.0, 7.0, 4.0)) * 3.0);
+        vec3 skin = mix(uSkin, uSkinLight, smoothstep(-0.1, 0.6, st) * 0.9);
+        float tS = smoothstep(uSkinW + 0.012, uSkinW - 0.012, edge);
+        vec3 base = mix(mix(flesh, uRind, tR), skin, tS);
+        float alpha = mix(mix(0.64, 0.9, tR), 0.985, tS);
+
+        float ndl = dot(N, L);
+        float wrap = pow(clamp(ndl * 0.5 + 0.5, 0.0, 1.0), 1.6);
+        vec3 hemi = mix(uGround, uSky, N.y * 0.5 + 0.5);
+        float fres = pow(1.0 - clamp(dot(N, V), 0.0, 1.0), 3.0);
+        vec3 Hh = normalize(L + V);
+        float nh = max(dot(N, Hh), 0.0);
+        float gloss = mix(1.0, 0.45, tS);
+        float spec = (pow(nh, 220.0) * 2.4 + pow(nh, 26.0) * 0.16) * gloss;
+        float trans = pow(clamp(dot(V, -L) * 0.5 + 0.5, 0.0, 1.0), 3.0) * (1.0 - tS);
+
+        vec3 col = base * (hemi * 0.5 + wrap * 0.75) + base * (trans * 0.55 + 0.14 * (1.0 - tS));
+        col += vec3(spec) + hemi * fres * 0.32;
+        alpha = clamp(alpha + fres * 0.28 + spec * 0.6, 0.0, 1.0);
+        gl_FragColor = vec4(col, alpha);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }`,
+  });
+
+  // ---------------------------------------------------------------- seeds
+  function seedGeometry() {
+    const pts = [];
+    const L = 0.14, W = 0.085;
+    for (let i = 0; i <= 18; i++) {
+      const t = i / 18;
+      const r = (W / 2) * Math.pow(Math.max(Math.sin(Math.PI * Math.pow(t, 0.7)), 0), 0.8);
+      pts.push(new THREE.Vector2(Math.max(r, 1e-4), (t - 0.4) * L));
+    }
+    const g = new THREE.LatheGeometry(pts, 14);
+    g.scale(1, 1, 0.42);
+    g.computeVertexNormals();
+    return g;
+  }
+  const seedMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.28, metalness: 0.0 });
+
+  // ---------------------------------------------------------------- math helpers
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function quatToMat(q, m) {
+    const x = q.x, y = q.y, z = q.z, w = q.w;
+    const x2 = x + x, y2 = y + y, z2 = z + z;
+    const xx = x * x2, xy = x * y2, xz = x * z2, yy = y * y2, yz = y * z2, zz = z * z2;
+    const wx = w * x2, wy = w * y2, wz = w * z2;
+    m[0] = 1 - (yy + zz); m[1] = xy - wz; m[2] = xz + wy;
+    m[3] = xy + wz; m[4] = 1 - (xx + zz); m[5] = yz - wx;
+    m[6] = xz - wy; m[7] = yz + wx; m[8] = 1 - (xx + yy);
+  }
+  function mul3(a, b, o) {
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++)
+      o[r * 3 + c] = a[r * 3] * b[c] + a[r * 3 + 1] * b[3 + c] + a[r * 3 + 2] * b[6 + c];
+  }
+  function det3(m) {
+    return m[0] * (m[4] * m[8] - m[5] * m[7]) - m[1] * (m[3] * m[8] - m[5] * m[6]) + m[2] * (m[3] * m[7] - m[4] * m[6]);
+  }
+  function inv3(m, o) {
+    const d = det3(m);
+    if (Math.abs(d) < 1e-12) { o.fill(0); return; }
+    const id = 1 / d;
+    o[0] = (m[4] * m[8] - m[5] * m[7]) * id; o[1] = (m[2] * m[7] - m[1] * m[8]) * id; o[2] = (m[1] * m[5] - m[2] * m[4]) * id;
+    o[3] = (m[5] * m[6] - m[3] * m[8]) * id; o[4] = (m[0] * m[8] - m[2] * m[6]) * id; o[5] = (m[2] * m[3] - m[0] * m[5]) * id;
+    o[6] = (m[3] * m[7] - m[4] * m[6]) * id; o[7] = (m[1] * m[6] - m[0] * m[7]) * id; o[8] = (m[0] * m[4] - m[1] * m[3]) * id;
+  }
+  const Rm = new Float64Array(9), Am = new Float64Array(9), Tm = new Float64Array(9);
+  const axis = new THREE.Vector3(), dq = new THREE.Quaternion();
+  // Müller et al. 2016, "A robust method to extract the rotational part of deformations"
+  function extractRotation(A, q, iters) {
+    for (let it = 0; it < iters; it++) {
+      quatToMat(q, Rm);
+      let ox = 0, oy = 0, oz = 0, dd = 0;
+      for (let k = 0; k < 3; k++) {
+        const rx = Rm[k], ry = Rm[3 + k], rz = Rm[6 + k];
+        const ax = A[k], ay = A[3 + k], az = A[6 + k];
+        ox += ry * az - rz * ay; oy += rz * ax - rx * az; oz += rx * ay - ry * ax;
+        dd += rx * ax + ry * ay + rz * az;
+      }
+      const s = 1 / (Math.abs(dd) + 1e-9);
+      ox *= s; oy *= s; oz *= s;
+      const w = Math.hypot(ox, oy, oz);
+      if (w < 1e-9) break;
+      axis.set(ox / w, oy / w, oz / w);
+      dq.setFromAxisAngle(axis, w);
+      q.premultiply(dq).normalize();
+    }
+  }
+
+  // ---------------------------------------------------------------- 2D polygon helpers (rest-space plan, x/z)
+  function polyArea(poly) {
+    let a = 0;
+    for (let i = 0; i < poly.length; i++) {
+      const p = poly[i], q = poly[(i + 1) % poly.length];
+      a += p.x * q.z - q.x * p.z;
+    }
+    return a / 2;
+  }
+  function polyCentroid(poly) {
+    let a = 0, cx = 0, cz = 0;
+    for (let i = 0; i < poly.length; i++) {
+      const p = poly[i], q = poly[(i + 1) % poly.length];
+      const cr = p.x * q.z - q.x * p.z;
+      a += cr; cx += (p.x + q.x) * cr; cz += (p.z + q.z) * cr;
+    }
+    a /= 2;
+    return { x: cx / (6 * a), z: cz / (6 * a) };
+  }
+  // keep side where nx*x + nz*z - d >= 0; each vertex carries the type of the edge that starts at it
+  function clipPoly(poly, nx, nz, d) {
+    const out = [];
+    const N = poly.length;
+    for (let i = 0; i < N; i++) {
+      const a = poly[i], b = poly[(i + 1) % N];
+      const da = nx * a.x + nz * a.z - d, db = nx * b.x + nz * b.z - d;
+      if (da >= 0) {
+        out.push({ x: a.x, z: a.z, t: a.t });
+        if (db < 0) {
+          const t = da / (da - db);
+          out.push({ x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t, t: 'cut' });
+        }
+      } else if (db >= 0) {
+        const t = da / (da - db);
+        out.push({ x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t, t: a.t });
+      }
+    }
+    return out.filter((p, i) => {
+      const q = out[(i + 1) % out.length];
+      return Math.hypot(p.x - q.x, p.z - q.z) > 1e-4;
+    });
+  }
+  function segCross(ax, az, bx, bz, cx, cz, dx, dz) {
+    const o = (px, pz, qx, qz, rx, rz) => (qx - px) * (rz - pz) - (qz - pz) * (rx - px);
+    const o1 = o(ax, az, bx, bz, cx, cz), o2 = o(ax, az, bx, bz, dx, dz);
+    const o3 = o(cx, cz, dx, dz, ax, az), o4 = o(cx, cz, dx, dz, bx, bz);
+    return (o1 > 0) !== (o2 > 0) && (o3 > 0) !== (o4 > 0);
+  }
+  function segmentHitsPoly(a, b, poly) {
+    for (let i = 0; i < poly.length; i++) {
+      const p = poly[i], q = poly[(i + 1) % poly.length];
+      if (segCross(a.x, a.z, b.x, b.z, p.x, p.z, q.x, q.z)) return true;
+    }
+    return false;
+  }
+
+  // ---------------------------------------------------------------- particle state
+  const P = { n: 0, x: null, v: null, s: null, p0: null, owner: null, hc: null };
+  function initParticles() {
+    const list = [];
+    const m = 0.5 * HS;
+    const nI = Math.ceil((R + m) / HS);
+    for (let iy = 0; iy < NY; iy++)
+      for (let iz = -nI; iz <= nI; iz++)
+        for (let ix = -nI; ix <= nI; ix++) {
+          const x = ix * HS, z = iz * HS, y = iy * HY;
+          if (z > m + 1e-6) continue;
+          if (x * x + z * z > (R + m) * (R + m)) continue;
+          list.push(x, y, z);
+        }
+    const n = list.length / 3;
+    P.n = n;
+    P.p0 = Float32Array.from(list);
+    P.x = new Float32Array(n * 3);
+    P.v = new Float32Array(n * 3);
+    P.s = new Float32Array(n * 3);
+    P.owner = new Int32Array(n);
+    P.hc = new Int32Array(n);
+  }
+
+  // ---------------------------------------------------------------- pieces
+  let pieces = [];
+  let uid = 1;
+  let seeds = [];
+  let seedMesh = null;
+
+  function buildConstraints(pc) {
+    const I = pc.idx, p0 = P.p0, lim = (1.8 * HS) ** 2;
+    const ci = [], cl = [];
+    for (let a = 0; a < I.length; a++) {
+      const i3 = I[a] * 3;
+      for (let b = a + 1; b < I.length; b++) {
+        const j3 = I[b] * 3;
+        const dx = p0[j3] - p0[i3], dy = p0[j3 + 1] - p0[i3 + 1], dz = p0[j3 + 2] - p0[i3 + 2];
+        const d2 = dx * dx + dy * dy + dz * dz;
+        if (d2 < lim) { ci.push(I[a], I[b]); cl.push(Math.sqrt(d2)); }
+      }
+    }
+    pc.ci = Int32Array.from(ci);
+    pc.cl = Float32Array.from(cl);
+  }
+
+  // K nearest particles in rest space with gaussian weights; writes into idx/w/off at slot o
+  function computeSkin(pc, rx, ry, rz, idxOut, wOut, offOut, o) {
+    const I = pc.idx, p0 = P.p0;
+    const bd = new Float64Array(K_SKIN).fill(Infinity), bi = new Int32Array(K_SKIN).fill(-1);
+    for (let a = 0; a < I.length; a++) {
+      const i3 = I[a] * 3;
+      const dx = p0[i3] - rx, dy = p0[i3 + 1] - ry, dz = p0[i3 + 2] - rz;
+      const d2 = dx * dx + dy * dy + dz * dz;
+      if (d2 >= bd[K_SKIN - 1]) continue;
+      let k = K_SKIN - 1;
+      while (k > 0 && bd[k - 1] > d2) { bd[k] = bd[k - 1]; bi[k] = bi[k - 1]; k--; }
+      bd[k] = d2; bi[k] = I[a];
+    }
+    let ws = 0, sx = 0, sy = 0, sz = 0;
+    const w = new Float64Array(K_SKIN);
+    for (let k = 0; k < K_SKIN; k++) {
+      w[k] = bi[k] < 0 ? 0 : Math.exp(-(bd[k] - bd[0]) / SKIN_SIG2);
+      ws += w[k];
+    }
+    for (let k = 0; k < K_SKIN; k++) {
+      const wk = w[k] / ws, j = Math.max(bi[k], 0);
+      idxOut[o * K_SKIN + k] = j; wOut[o * K_SKIN + k] = wk;
+      sx += wk * p0[j * 3]; sy += wk * p0[j * 3 + 1]; sz += wk * p0[j * 3 + 2];
+    }
+    offOut[o * 3] = rx - sx; offOut[o * 3 + 1] = ry - sy; offOut[o * 3 + 2] = rz - sz;
+  }
+
+  function buildMesh(pc) {
+    const poly = pc.poly, N = poly.length;
+    const en = [];
+    for (let i = 0; i < N; i++) {
+      const a = poly[i], b = poly[(i + 1) % N];
+      const dx = b.x - a.x, dz = b.z - a.z, L = Math.hypot(dx, dz) || 1;
+      en.push({ x: -dz / L, z: dx / L }); // inward (polygon is CCW in x/z)
+    }
+    const cols = [];
+    for (let i = 0; i < N; i++) {
+      const a = poly[i], b = poly[(i + 1) % N];
+      const np = en[(i - 1 + N) % N], nn = en[i];
+      let mx = np.x + nn.x, mz = np.z + nn.z;
+      const ml = Math.hypot(mx, mz);
+      if (ml < 1e-6) { mx = nn.x; mz = nn.z; } else { mx /= ml; mz /= ml; }
+      const sc = 1 / Math.max(mx * nn.x + mz * nn.z, 0.35);
+      cols.push({ x: a.x, z: a.z, ox: mx * sc, oz: mz * sc });
+      const L = Math.hypot(b.x - a.x, b.z - a.z);
+      const segs = a.t === 'arc' ? 1 : Math.max(1, Math.ceil(L / 0.11));
+      for (let s = 1; s < segs; s++) {
+        const t = s / segs;
+        cols.push({ x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t, ox: nn.x, oz: nn.z });
+      }
+    }
+    const c = polyCentroid(poly);
+    const NT = 6, NB = 4, NW = 3, b = BEVEL;
+    const rows = [];
+    for (let k = 0; k <= NT; k++) { const s = k / NT; rows.push({ m: 0, s, y: H + 0.022 * (1 - s * s) }); }
+    for (let k = 1; k <= NB; k++) { const f = k / NB * Math.PI / 2; rows.push({ m: 1, inset: b * (1 - Math.sin(f)), y: H - b + b * Math.cos(f) }); }
+    for (let k = 1; k < NW; k++) rows.push({ m: 1, inset: 0, y: (H - b) - (H - 2 * b) * k / NW });
+    for (let k = 0; k <= NB; k++) { const f = (1 - k / NB) * Math.PI / 2; rows.push({ m: 1, inset: b * (1 - Math.sin(f)), y: b - b * Math.cos(f) }); }
+    for (let k = 1; k <= NT; k++) rows.push({ m: 0, s: 1 - k / NT, y: 0 });
+
+    const M = cols.length, NR = rows.length, NV = M * NR;
+    const rest = new Float32Array(NV * 3);
+    for (let r = 0; r < NR; r++) {
+      const row = rows[r];
+      for (let j = 0; j < M; j++) {
+        const p = cols[j], o = (r * M + j) * 3;
+        let x, z;
+        if (row.m === 0) {
+          const px = p.x + b * p.ox, pz = p.z + b * p.oz;
+          x = c.x + row.s * (px - c.x); z = c.z + row.s * (pz - c.z);
+        } else {
+          x = p.x + row.inset * p.ox; z = p.z + row.inset * p.oz;
+        }
+        rest[o] = x; rest[o + 1] = row.y; rest[o + 2] = z;
+      }
+    }
+    const index = [];
+    for (let r = 0; r < NR - 1; r++)
+      for (let j = 0; j < M; j++) {
+        const a = r * M + j, bb = (r + 1) * M + j, cc = (r + 1) * M + (j + 1) % M, d = r * M + (j + 1) % M;
+        index.push(a, bb, cc, a, cc, d);
+      }
+    // columns run counter-clockwise in x/z, which winds the lathe inward; flip so faces point out
+    if (polyArea(poly) > 0) for (let i = 0; i < index.length; i += 3) { const t = index[i + 1]; index[i + 1] = index[i + 2]; index[i + 2] = t; }
+    const skI = new Int32Array(NV * K_SKIN), skW = new Float32Array(NV * K_SKIN), skO = new Float32Array(NV * 3);
+    for (let v = 0; v < NV; v++) computeSkin(pc, rest[v * 3], rest[v * 3 + 1], rest[v * 3 + 2], skI, skW, skO, v);
+
+    const geo = new THREE.BufferGeometry();
+    const pos = new THREE.BufferAttribute(new Float32Array(NV * 3), 3);
+    pos.setUsage(THREE.DynamicDrawUsage);
+    geo.setAttribute('position', pos);
+    geo.setAttribute('aRest', new THREE.BufferAttribute(rest, 3));
+    geo.setIndex(index);
+    pc.geo = geo; pc.nv = NV; pc.skI = skI; pc.skW = skW; pc.skO = skO;
+    pc.restVol = meshVolume(rest, geo.index.array);
+    pc.mesh = new THREE.Mesh(geo, jellyMat);
+    pc.mesh.castShadow = true;
+    pc.mesh.frustumCulled = false;
+    pc.mesh.userData.piece = pc;
+    scene.add(pc.mesh);
+  }
+
+  function meshVolume(pos, idx) {
+    let v = 0;
+    for (let i = 0; i < idx.length; i += 3) {
+      const a = idx[i] * 3, b = idx[i + 1] * 3, c = idx[i + 2] * 3;
+      v += pos[a] * (pos[b + 1] * pos[c + 2] - pos[b + 2] * pos[c + 1])
+         - pos[a + 1] * (pos[b] * pos[c + 2] - pos[b + 2] * pos[c])
+         + pos[a + 2] * (pos[b] * pos[c + 1] - pos[b + 1] * pos[c]);
+    }
+    return Math.abs(v / 6);
+  }
+
+  function makePiece(poly, idx, seedList, quat) {
+    const pc = { uid: uid++, poly, idx: Int32Array.from(idx), seeds: seedList, quat: quat.clone(), c: new Float64Array(3), fresh: 2 };
+    const n = pc.idx.length, p0 = P.p0;
+    let cx = 0, cy = 0, cz = 0;
+    for (const i of pc.idx) { cx += p0[i * 3]; cy += p0[i * 3 + 1]; cz += p0[i * 3 + 2]; P.owner[i] = pc.uid; }
+    cx /= n; cy /= n; cz /= n;
+    pc.c0 = [cx, cy, cz];
+    pc.q = new Float32Array(n * 3);
+    const Aqq = new Float64Array(9);
+    for (let k = 0; k < n; k++) {
+      const i3 = pc.idx[k] * 3;
+      const qx = p0[i3] - cx, qy = p0[i3 + 1] - cy, qz = p0[i3 + 2] - cz;
+      pc.q[k * 3] = qx; pc.q[k * 3 + 1] = qy; pc.q[k * 3 + 2] = qz;
+      Aqq[0] += qx * qx; Aqq[1] += qx * qy; Aqq[2] += qx * qz;
+      Aqq[3] += qy * qx; Aqq[4] += qy * qy; Aqq[5] += qy * qz;
+      Aqq[6] += qz * qx; Aqq[7] += qz * qy; Aqq[8] += qz * qz;
+    }
+    pc.aqqInv = new Float64Array(9);
+    inv3(Aqq, pc.aqqInv);
+    buildConstraints(pc);
+    buildMesh(pc);
+    for (const s of seedList) {
+      s.skI = new Int32Array(K_SKIN); s.skW = new Float32Array(K_SKIN); s.skO = new Float32Array(3);
+      computeSkin(pc, s.x, s.y, s.z, s.skI, s.skW, s.skO, 0);
+    }
+    return pc;
+  }
+
+  function disposePiece(pc) {
+    scene.remove(pc.mesh);
+    pc.geo.dispose();
+  }
+
+  function genSeeds() {
+    const rnd = mulberry32(9);
+    const out = [];
+    const up = new THREE.Vector3(0, 1, 0);
+    let tries = 0;
+    while (out.length < 30 && tries++ < 4000) {
+      const a = Math.PI + rnd() * Math.PI;
+      const rr = R * (0.4 + rnd() * 0.36);
+      const x = rr * Math.cos(a), z = rr * Math.sin(a);
+      if (z > -0.16) continue;
+      const y = 0.17 + rnd() * (H - 0.34);
+      if (out.some((s) => (s.x - x) ** 2 + (s.z - z) ** 2 + (s.y - y) ** 2 < 0.25 * 0.25)) continue;
+      const ang = Math.atan2(-z, -x) + (rnd() - 0.5) * 0.5;
+      const u = new THREE.Vector3(Math.cos(ang), 0, Math.sin(ang));
+      const xAxis = new THREE.Vector3().crossVectors(u, up);
+      const q0 = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(xAxis, u, up));
+      q0.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), (rnd() - 0.5) * 0.9));
+      out.push({ x, y, z, q0, pale: rnd() < 0.13, scale: 0.85 + rnd() * 0.3 });
+    }
+    return out;
+  }
+
+  // ---------------------------------------------------------------- reset / build world
+  const stats = { dev: 0, sag: 0, n: 0 };
+  function buildWorld() {
+    for (const pc of pieces) disposePiece(pc);
+    pieces = [];
+    if (!P.p0) initParticles();
+    if (seedMesh) { scene.remove(seedMesh); seedMesh.geometry.dispose(); }
+    seeds = genSeeds();
+    seedMesh = new THREE.InstancedMesh(seedGeometry(), seedMat, seeds.length);
+    seedMesh.castShadow = true;
+    seedMesh.frustumCulled = false;
+    const dark = new THREE.Color('#1b120c'), pale = new THREE.Color('#eadfc4');
+    seeds.forEach((s, i) => seedMesh.setColorAt(i, s.pale ? pale : dark));
+    seeds.forEach((s, i) => { s.i = i; });
+    scene.add(seedMesh);
+
+    // half-disc: arc from angle π to 2π (z <= 0), then the flat edge back
+    const poly = [];
+    const SEG = 64;
+    for (let i = 0; i < SEG; i++) {
+      const a = Math.PI + Math.PI * i / SEG;
+      poly.push({ x: R * Math.cos(a), z: R * Math.sin(a), t: 'arc' });
+    }
+    poly.push({ x: R, z: 0, t: 'flat' });
+
+    const tilt = reduceMotion ? new THREE.Quaternion() : new THREE.Quaternion().setFromEuler(new THREE.Euler(0.16, 0.25, -0.07));
+    const all = [];
+    for (let i = 0; i < P.n; i++) all.push(i);
+    const pc = makePiece(poly, all, seeds.slice(), tilt);
+    const drop = reduceMotion ? 0 : 1.0;
+    const v = new THREE.Vector3();
+    for (let i = 0; i < P.n; i++) {
+      v.set(P.p0[i * 3] - pc.c0[0], P.p0[i * 3 + 1] - pc.c0[1], P.p0[i * 3 + 2] - pc.c0[2]).applyQuaternion(tilt);
+      P.x[i * 3] = v.x; P.x[i * 3 + 1] = v.y + pc.c0[1] + drop; P.x[i * 3 + 2] = v.z;
+      P.v[i * 3] = 0; P.v[i * 3 + 1] = 0; P.v[i * 3 + 2] = 0;
+    }
+    pieces.push(pc);
+    restVolumeTotal = pieces.reduce((s, p) => s + p.restVol, 0);
+    for (const p of pieces) { shapeMatch(p, 0, 0, false); deformPiece(p); }
+    updateSeeds();
+  }
+  let restVolumeTotal = 1;
+
+  // ---------------------------------------------------------------- simulation
+  let firm = 0.4, damp = 0.25;
+  const BETA = 0.3;
+  function shapeMatch(pc, alpha, beta, measure) {
+    const I = pc.idx, n = I.length, x = P.x, q = pc.q;
+    let cx = 0, cy = 0, cz = 0;
+    for (let k = 0; k < n; k++) { const i3 = I[k] * 3; cx += x[i3]; cy += x[i3 + 1]; cz += x[i3 + 2]; }
+    cx /= n; cy /= n; cz /= n;
+    Am.fill(0);
+    for (let k = 0; k < n; k++) {
+      const i3 = I[k] * 3, k3 = k * 3;
+      const dx = x[i3] - cx, dy = x[i3 + 1] - cy, dz = x[i3 + 2] - cz;
+      const qx = q[k3], qy = q[k3 + 1], qz = q[k3 + 2];
+      Am[0] += dx * qx; Am[1] += dx * qy; Am[2] += dx * qz;
+      Am[3] += dy * qx; Am[4] += dy * qy; Am[5] += dy * qz;
+      Am[6] += dz * qx; Am[7] += dz * qy; Am[8] += dz * qz;
+    }
+    extractRotation(Am, pc.quat, pc.fresh > 0 ? 24 : 3);
+    if (pc.fresh > 0) pc.fresh--;
+    pc.c[0] = cx; pc.c[1] = cy; pc.c[2] = cz;
+    if (alpha <= 0 && !measure) return;
+    quatToMat(pc.quat, Rm);
+    mul3(Am, pc.aqqInv, Tm);
+    const det = det3(Tm);
+    if (beta > 0 && det > 0.1) {
+      const s = beta / Math.cbrt(det);
+      for (let k = 0; k < 9; k++) Tm[k] = Tm[k] * s + (1 - beta) * Rm[k];
+    } else Tm.set(Rm);
+    let dev = 0, sag = 0;
+    for (let k = 0; k < n; k++) {
+      const i3 = I[k] * 3, k3 = k * 3;
+      const qx = q[k3], qy = q[k3 + 1], qz = q[k3 + 2];
+      const ex = cx + Tm[0] * qx + Tm[1] * qy + Tm[2] * qz - x[i3];
+      const ey = cy + Tm[3] * qx + Tm[4] * qy + Tm[5] * qz - x[i3 + 1];
+      const ez = cz + Tm[6] * qx + Tm[7] * qy + Tm[8] * qz - x[i3 + 2];
+      if (measure) { dev += Math.sqrt(ex * ex + ey * ey + ez * ez); sag += ey * qy; } // squash: top vs bottom layers
+      x[i3] += alpha * ex; x[i3 + 1] += alpha * ey; x[i3 + 2] += alpha * ez;
+    }
+    if (measure) { stats.dev += dev; stats.sag += sag; stats.n += n; }
+  }
+
+  function solveDistance(pc, k) {
+    const c = pc.ci, L = pc.cl, x = P.x;
+    for (let m = 0, nc = L.length; m < nc; m++) {
+      const i = c[m * 2] * 3, j = c[m * 2 + 1] * 3;
+      const dx = x[j] - x[i], dy = x[j + 1] - x[i + 1], dz = x[j + 2] - x[i + 2];
+      const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      if (d < 1e-9) continue;
+      const s = k * (d - L[m]) / d * 0.5;
+      x[i] += dx * s; x[i + 1] += dy * s; x[i + 2] += dz * s;
+      x[j] -= dx * s; x[j + 1] -= dy * s; x[j + 2] -= dz * s;
+    }
+  }
+
+  const TBL = 8192;
+  const cellStart = new Int32Array(TBL + 1);
+  let cellEnt = null;
+  const hashc = (ix, iy, iz) => (Math.imul(ix, 92837111) ^ Math.imul(iy, 689287499) ^ Math.imul(iz, 283923481)) & (TBL - 1);
+  function collidePieces() {
+    const n = P.n, x = P.x, own = P.owner, hc = P.hc, inv = 1 / COLL_R, r2 = COLL_R * COLL_R;
+    if (!cellEnt || cellEnt.length < n) cellEnt = new Int32Array(n);
+    cellStart.fill(0);
+    for (let i = 0; i < n; i++) {
+      const h = hashc(Math.floor(x[i * 3] * inv), Math.floor(x[i * 3 + 1] * inv), Math.floor(x[i * 3 + 2] * inv));
+      hc[i] = h; cellStart[h]++;
+    }
+    let s = 0;
+    for (let h = 0; h < TBL; h++) { s += cellStart[h]; cellStart[h] = s; }
+    cellStart[TBL] = s;
+    for (let i = 0; i < n; i++) { const h = hc[i]; cellStart[h]--; cellEnt[cellStart[h]] = i; }
+    for (let i = 0; i < n; i++) {
+      const i3 = i * 3;
+      const ix = Math.floor(x[i3] * inv), iy = Math.floor(x[i3 + 1] * inv), iz = Math.floor(x[i3 + 2] * inv);
+      for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
+        const h = hashc(ix + a, iy + b, iz + c);
+        for (let e = cellStart[h], end = cellStart[h + 1]; e < end; e++) {
+          const j = cellEnt[e];
+          if (j <= i || own[j] === own[i]) continue;
+          const j3 = j * 3;
+          const dx = x[j3] - x[i3], dy = x[j3 + 1] - x[i3 + 1], dz = x[j3 + 2] - x[i3 + 2];
+          const d2 = dx * dx + dy * dy + dz * dz;
+          if (d2 >= r2 || d2 < 1e-12) continue;
+          const d = Math.sqrt(d2), k = (COLL_R - d) / d * 0.4;
+          x[i3] -= dx * k; x[i3 + 1] -= dy * k; x[i3 + 2] -= dz * k;
+          x[j3] += dx * k; x[j3 + 1] += dy * k; x[j3 + 2] += dz * k;
+        }
+      }
+    }
+  }
+
+  let grab = null;
+  const grabTarget = new THREE.Vector3();
+
+  function step() {
+    const n = P.n, x = P.x, v = P.v, s = P.s;
+    const alpha = 0.003 + 0.09 * firm * firm;
+    const kd = 0.012 + 0.11 * firm;
+    const gamma = 0.0005 + 0.03 * damp * damp;
+    stats.dev = 0; stats.sag = 0; stats.n = 0;
+    for (let sub = 0; sub < SUB; sub++) {
+      for (let i = 0; i < n * 3; i += 3) {
+        s[i] = x[i]; s[i + 1] = x[i + 1]; s[i + 2] = x[i + 2];
+        v[i + 1] -= GRAV * SDT;
+        x[i] += v[i] * SDT; x[i + 1] += v[i + 1] * SDT; x[i + 2] += v[i + 2] * SDT;
+      }
+      if (grab) {
+        for (let k = 0; k < grab.ids.length; k++) {
+          const i3 = grab.ids[k] * 3, w = grab.ws[k] * 0.3;
+          x[i3] += w * (grabTarget.x + grab.offs[k * 3] - x[i3]);
+          x[i3 + 1] += w * (Math.max(grabTarget.y + grab.offs[k * 3 + 1], 0) - x[i3 + 1]);
+          x[i3 + 2] += w * (grabTarget.z + grab.offs[k * 3 + 2] - x[i3 + 2]);
+        }
+      }
+      for (let it = 0; it < 2; it++) for (const pc of pieces) solveDistance(pc, kd);
+      for (const pc of pieces) shapeMatch(pc, alpha, BETA, sub === SUB - 1);
+      if (pieces.length > 1) collidePieces();
+      for (let i = 0; i < n * 3; i += 3) {
+        if (x[i + 1] < 0) {
+          x[i + 1] = 0;
+          x[i] -= (x[i] - s[i]) * 0.45;
+          x[i + 2] -= (x[i + 2] - s[i + 2]) * 0.45;
+        }
+        const rr = Math.hypot(x[i], x[i + 2]);
+        if (rr > TABLE_R) { x[i] *= TABLE_R / rr; x[i + 2] *= TABLE_R / rr; }
+      }
+      const inv = 1 / SDT;
+      for (let i = 0; i < n * 3; i += 3) {
+        let vx = (x[i] - s[i]) * inv, vy = (x[i + 1] - s[i + 1]) * inv, vz = (x[i + 2] - s[i + 2]) * inv;
+        const sp = Math.hypot(vx, vy, vz);
+        if (sp > 40) { vx *= 40 / sp; vy *= 40 / sp; vz *= 40 / sp; }
+        v[i] = vx * 0.9998; v[i + 1] = vy * 0.9998; v[i + 2] = vz * 0.9998;
+      }
+      for (const pc of pieces) {
+        const I = pc.idx, m = I.length;
+        let mx = 0, my = 0, mz = 0;
+        for (let k = 0; k < m; k++) { const i3 = I[k] * 3; mx += v[i3]; my += v[i3 + 1]; mz += v[i3 + 2]; }
+        mx /= m; my /= m; mz /= m;
+        for (let k = 0; k < m; k++) {
+          const i3 = I[k] * 3;
+          v[i3] = mx + (v[i3] - mx) * (1 - gamma);
+          v[i3 + 1] = my + (v[i3 + 1] - my) * (1 - gamma);
+          v[i3 + 2] = mz + (v[i3 + 2] - mz) * (1 - gamma);
+        }
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------- render-side deformation
+  const RmD = new Float64Array(9);
+  function deformPiece(pc) {
+    quatToMat(pc.quat, RmD);
+    const pos = pc.geo.attributes.position.array, x = P.x;
+    const skI = pc.skI, skW = pc.skW, skO = pc.skO;
+    for (let v = 0, nv = pc.nv; v < nv; v++) {
+      let sx = 0, sy = 0, sz = 0;
+      const b = v * K_SKIN;
+      for (let k = 0; k < K_SKIN; k++) {
+        const j = skI[b + k] * 3, w = skW[b + k];
+        sx += w * x[j]; sy += w * x[j + 1]; sz += w * x[j + 2];
+      }
+      const ox = skO[v * 3], oy = skO[v * 3 + 1], oz = skO[v * 3 + 2];
+      pos[v * 3] = sx + RmD[0] * ox + RmD[1] * oy + RmD[2] * oz;
+      pos[v * 3 + 1] = sy + RmD[3] * ox + RmD[4] * oy + RmD[5] * oz;
+      pos[v * 3 + 2] = sz + RmD[6] * ox + RmD[7] * oy + RmD[8] * oz;
+    }
+    pc.geo.attributes.position.needsUpdate = true;
+    pc.geo.computeVertexNormals();
+  }
+  const sm = new THREE.Matrix4(), sp = new THREE.Vector3(), sq = new THREE.Quaternion(), ss = new THREE.Vector3();
+  function updateSeeds() {
+    const x = P.x;
+    for (const pc of pieces) {
+      quatToMat(pc.quat, RmD);
+      for (const s of pc.seeds) {
+        let px = 0, py = 0, pz = 0;
+        for (let k = 0; k < K_SKIN; k++) {
+          const j = s.skI[k] * 3, w = s.skW[k];
+          px += w * x[j]; py += w * x[j + 1]; pz += w * x[j + 2];
+        }
+        const ox = s.skO[0], oy = s.skO[1], oz = s.skO[2];
+        sp.set(px + RmD[0] * ox + RmD[1] * oy + RmD[2] * oz,
+               py + RmD[3] * ox + RmD[4] * oy + RmD[5] * oz,
+               pz + RmD[6] * ox + RmD[7] * oy + RmD[8] * oz);
+        sq.copy(pc.quat).multiply(s.q0);
+        ss.setScalar(s.scale);
+        sm.compose(sp, sq, ss);
+        seedMesh.setMatrixAt(s.i, sm);
+      }
+    }
+    seedMesh.instanceMatrix.needsUpdate = true;
+  }
+
+  // ---------------------------------------------------------------- slicing
+  const tmpV = new THREE.Vector3(), invQ = new THREE.Quaternion();
+  function toRest(pc, w) {
+    invQ.copy(pc.quat).invert();
+    tmpV.set(w.x - pc.c[0], w.y - pc.c[1], w.z - pc.c[2]).applyQuaternion(invQ);
+    return { x: tmpV.x + pc.c0[0], z: tmpV.z + pc.c0[2] };
+  }
+  function slice(A, B) {
+    const next = [];
+    let cuts = 0;
+    for (const pc of pieces) {
+      if (pieces.length + cuts >= MAX_PIECES) { next.push(pc); continue; }
+      shapeMatch(pc, 0, 0, false);
+      const a = toRest(pc, A), b = toRest(pc, B);
+      const dx = b.x - a.x, dz = b.z - a.z, L = Math.hypot(dx, dz);
+      if (L < 1e-4 || !segmentHitsPoly(a, b, pc.poly)) { next.push(pc); continue; }
+      const nx = -dz / L, nz = dx / L, d = nx * a.x + nz * a.z;
+      const polyA = clipPoly(pc.poly, nx, nz, d), polyB = clipPoly(pc.poly, -nx, -nz, -d);
+      if (polyA.length < 3 || polyB.length < 3 || polyArea(polyA) < 0.06 || polyArea(polyB) < 0.06) { next.push(pc); continue; }
+      const ia = [], ib = [];
+      for (const i of pc.idx) (nx * P.p0[i * 3] + nz * P.p0[i * 3 + 2] - d >= 0 ? ia : ib).push(i);
+      if (ia.length < 16 || ib.length < 16) { next.push(pc); continue; }
+      const sa = [], sb = [];
+      for (const s of pc.seeds) (nx * s.x + nz * s.z - d >= 0 ? sa : sb).push(s);
+      const pa = makePiece(polyA, ia, sa, pc.quat);
+      const pb = makePiece(polyB, ib, sb, pc.quat);
+      pa.c.set(pc.c); pb.c.set(pc.c);
+      // nudge the halves apart along the cut normal
+      const nW = new THREE.Vector3(nx, 0, nz).applyQuaternion(pc.quat);
+      nW.y = 0; nW.normalize();
+      const push = 1.1;
+      for (const i of ia) { P.v[i * 3] += nW.x * push; P.v[i * 3 + 1] += 0.5; P.v[i * 3 + 2] += nW.z * push; }
+      for (const i of ib) { P.v[i * 3] -= nW.x * push; P.v[i * 3 + 1] += 0.5; P.v[i * 3 + 2] -= nW.z * push; }
+      disposePiece(pc);
+      next.push(pa, pb);
+      cuts++;
+    }
+    pieces = next;
+    if (cuts) {
+      for (const pc of pieces) { shapeMatch(pc, 0, 0, false); deformPiece(pc); }
+      updateSeeds();
+    }
+    return cuts;
+  }
+
+  // ---------------------------------------------------------------- knife visuals
+  function buildKnife() {
+    const g = new THREE.Group();
+    const s = new THREE.Shape();
+    s.moveTo(0, 0); s.lineTo(1.3, 0);
+    s.quadraticCurveTo(1.68, 0.03, 1.82, 0.26);
+    s.lineTo(1.78, 0.34); s.lineTo(0, 0.34); s.lineTo(0, 0);
+    const bladeGeo = new THREE.ExtrudeGeometry(s, { depth: 0.012, bevelEnabled: false });
+    bladeGeo.translate(-0.9, 0, -0.006);
+    const blade = new THREE.Mesh(bladeGeo, new THREE.MeshStandardMaterial({ color: 0xdfe4e3, roughness: 0.25, metalness: 0.35 }));
+    const handle = new THREE.Mesh(new RoundedBox(0.9, 0.2, 0.08), new THREE.MeshStandardMaterial({ color: 0x1d2a21, roughness: 0.55 }));
+    handle.position.set(-0.9 - 0.45, 0.2, 0);
+    blade.castShadow = handle.castShadow = true;
+    g.add(blade, handle);
+    g.visible = false;
+    return g;
+  }
+  function RoundedBox(w, h, d) {
+    const g = new THREE.CapsuleGeometry(h / 2, w - h, 4, 10);
+    g.rotateZ(Math.PI / 2);
+    g.scale(1, 1, d / h);
+    return g;
+  }
+  const knife = buildKnife();
+  scene.add(knife);
+  const knifeState = { y: H + 0.5, yTarget: H + 0.5, angle: 0, pos: new THREE.Vector3() };
+
+  const strokeGeo = new THREE.BufferGeometry();
+  strokeGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+  const strokeMat = new THREE.LineBasicMaterial({ color: 0xd8303f, transparent: true, depthTest: false });
+  const strokeLine = new THREE.Line(strokeGeo, strokeMat);
+  strokeLine.renderOrder = 999;
+  strokeLine.frustumCulled = false;
+  strokeLine.visible = false;
+  scene.add(strokeLine);
+  let strokeFade = 0;
+  function setStroke(a, b) {
+    const p = strokeGeo.attributes.position.array;
+    p[0] = a.x; p[1] = H + 0.06; p[2] = a.z; p[3] = b.x; p[4] = H + 0.06; p[5] = b.z;
+    strokeGeo.attributes.position.needsUpdate = true;
+  }
+
+  // ---------------------------------------------------------------- input
+  const ray = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  const knifePlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -KNIFE_Y);
+  let tool = 'press';
+  let shiftHeld = false;
+  let pointerIn = false;
+  let paused = false;
+  let action = null; // {type:'grab'|'knife'|'orbit', ...}
+  const knifeActive = () => tool === 'knife' || shiftHeld;
+
+  function setRay(e) {
+    const r = canvas.getBoundingClientRect();
+    ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+  }
+  function pickJelly() {
+    const meshes = pieces.map((pc) => { pc.geo.computeBoundingSphere(); return pc.mesh; });
+    const hits = ray.intersectObjects(meshes, false);
+    return hits[0] || null;
+  }
+  function onKnifePlane(out) { return ray.ray.intersectPlane(knifePlane, out); }
+
+  function beginGrab(hit, e) {
+    const pc = hit.object.userData.piece;
+    const ids = [], ws = [], offs = [];
+    const RG = 0.6;
+    let best = -1, bestD = Infinity;
+    for (const i of pc.idx) {
+      const dx = P.x[i * 3] - hit.point.x, dy = P.x[i * 3 + 1] - hit.point.y, dz = P.x[i * 3 + 2] - hit.point.z;
+      const d = Math.hypot(dx, dy, dz);
+      if (d < bestD) { bestD = d; best = i; }
+      if (d < RG) { ids.push(i); ws.push((1 - d / RG) ** 2); offs.push(dx, dy, dz); }
+    }
+    if (!ids.length) { ids.push(best); ws.push(1); offs.push(0, 0, 0); }
+    const n = camera.getWorldDirection(new THREE.Vector3()).negate();
+    action = {
+      type: 'grab', pc, ids, ws, offs,
+      plane: new THREE.Plane().setFromNormalAndCoplanarPoint(n, hit.point),
+      x0: e.clientX, y0: e.clientY, t0: performance.now(), moved: false,
+      dir: ray.ray.direction.clone(),
+    };
+    grabTarget.copy(hit.point);
+    grab = action;
+    canvas.style.cursor = 'grabbing';
+  }
+
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+  canvas.addEventListener('pointerdown', (e) => {
+    canvas.focus({ preventScroll: true });
+    canvas.setPointerCapture(e.pointerId);
+    setRay(e);
+    shiftHeld = e.shiftKey;
+    if (e.button === 2 || e.button === 1) {
+      action = { type: 'orbit', x: e.clientX, y: e.clientY };
+      return;
+    }
+    if (knifeActive()) {
+      const p = new THREE.Vector3();
+      if (onKnifePlane(p)) {
+        action = { type: 'knife', a: p.clone(), b: p.clone() };
+        setStroke(p, p);
+        strokeLine.visible = true; strokeMat.opacity = 1; strokeFade = 0;
+        knifeState.yTarget = -0.02;
+      }
+      return;
+    }
+    const hit = pickJelly();
+    if (hit) beginGrab(hit, e);
+    else action = { type: 'orbit', x: e.clientX, y: e.clientY };
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    pointerIn = true;
+    setRay(e);
+    if (knifeActive() || (action && action.type === 'knife')) {
+      const p = new THREE.Vector3();
+      if (onKnifePlane(p)) {
+        if (action && action.type === 'knife') {
+          action.b.copy(p);
+          setStroke(action.a, action.b);
+          const dx = action.b.x - action.a.x, dz = action.b.z - action.a.z;
+          if (dx * dx + dz * dz > 0.0004) knifeState.angle = Math.atan2(-dz, dx);
+        }
+        knifeState.pos.copy(p);
+      }
+    }
+    if (!action) {
+      if (!knifeActive()) canvas.style.cursor = pickJelly() ? 'grab' : 'default';
+      else canvas.style.cursor = 'crosshair';
+      return;
+    }
+    if (action.type === 'orbit') {
+      const dx = e.clientX - action.x, dy = e.clientY - action.y;
+      action.x = e.clientX; action.y = e.clientY;
+      orbit.theta -= dx * 0.006;
+      orbit.phi = Math.min(1.45, Math.max(0.22, orbit.phi + dy * 0.005));
+      updateCamera();
+    } else if (action.type === 'grab') {
+      if (Math.hypot(e.clientX - action.x0, e.clientY - action.y0) > 4) action.moved = true;
+      const p = new THREE.Vector3();
+      if (ray.ray.intersectPlane(action.plane, p)) {
+        // limit how far the patch can be pulled from its body
+        const c = new THREE.Vector3().fromArray(action.pc.c);
+        const off = p.clone().sub(c);
+        const max = 3.2;
+        if (off.length() > max) p.copy(c).add(off.setLength(max));
+        grabTarget.copy(p);
+      }
+    }
+  });
+
+  function endAction(e) {
+    if (!action) return;
+    if (action.type === 'grab') {
+      const quick = !action.moved && performance.now() - action.t0 < 260;
+      if (quick) {
+        // poke: shove the touched patch along the view ray
+        for (let k = 0; k < action.ids.length; k++) {
+          const i3 = action.ids[k] * 3, w = action.ws[k] * 7;
+          P.v[i3] += action.dir.x * w; P.v[i3 + 1] += action.dir.y * w; P.v[i3 + 2] += action.dir.z * w;
+        }
+      }
+      grab = null;
+      canvas.style.cursor = 'grab';
+    } else if (action.type === 'knife') {
+      const { a, b } = action;
+      if (a.distanceTo(b) > 0.3) {
+        const n = slice(a, b);
+        if (n) flashPieces();
+      }
+      strokeFade = 1;
+      knifeState.yTarget = H + 0.5;
+    }
+    action = null;
+    try { canvas.releasePointerCapture(e.pointerId); } catch (_) { /* already released */ }
+  }
+  canvas.addEventListener('pointerup', endAction);
+  canvas.addEventListener('pointercancel', endAction);
+  canvas.addEventListener('pointerleave', () => { if (!action) pointerIn = false; });
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    orbit.zoom = Math.min(1.8, Math.max(0.55, orbit.zoom * Math.exp(e.deltaY * 0.001)));
+    updateCamera();
+  }, { passive: false });
+
+  // ---------------------------------------------------------------- UI
+  const ui = {
+    mass: $('r-mass'), vol: $('r-vol'), dv: $('r-dv'), pieces: $('r-pieces'), strain: $('r-strain'),
+    firm: $('firm'), firmO: $('firm-o'), damp: $('damp'), dampO: $('damp-o'),
+    pause: $('pause'), reset: $('reset'), tPress: $('t-press'), tKnife: $('t-knife'), hint: $('hint'),
+  };
+  function setTool(t) {
+    tool = t;
+    ui.tPress.setAttribute('aria-pressed', String(t === 'press'));
+    ui.tKnife.setAttribute('aria-pressed', String(t === 'knife'));
+    ui.hint.innerHTML = t === 'press'
+      ? '<b>Drag</b> the jelly to press and stretch it. <b>Click</b> to poke. Drag the table to turn it. Hold <b>Shift</b> to slice.'
+      : '<b>Draw a line</b> across the jelly to slice it. Every piece keeps its own wobble. Right-drag turns the table.';
+    canvas.style.cursor = t === 'knife' ? 'crosshair' : 'default';
+  }
+  function setPaused(p) {
+    paused = p;
+    ui.pause.textContent = p ? 'Resume' : 'Pause';
+    ui.pause.setAttribute('aria-pressed', String(p));
+  }
+  ui.tPress.addEventListener('click', () => setTool('press'));
+  ui.tKnife.addEventListener('click', () => setTool('knife'));
+  ui.pause.addEventListener('click', () => setPaused(!paused));
+  ui.reset.addEventListener('click', () => { buildWorld(); trace.fill(0); });
+  ui.firm.addEventListener('input', () => { firm = ui.firm.value / 100; ui.firmO.textContent = ui.firm.value; });
+  ui.damp.addEventListener('input', () => { damp = ui.damp.value / 100; ui.dampO.textContent = ui.damp.value; });
+  firm = ui.firm.value / 100; ui.firmO.textContent = ui.firm.value;
+  damp = ui.damp.value / 100; ui.dampO.textContent = ui.damp.value;
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Shift') shiftHeld = true;
+    const tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key.toLowerCase();
+    if (k === 'k') setTool('knife');
+    else if (k === 'p') setTool('press');
+    else if (k === ' ' && tag !== 'BUTTON') { e.preventDefault(); setPaused(!paused); }
+    else if (k === 'r') { buildWorld(); trace.fill(0); }
+  });
+  window.addEventListener('keyup', (e) => { if (e.key === 'Shift') shiftHeld = false; });
+  window.addEventListener('blur', () => { shiftHeld = false; });
+
+  let piecesFlash = 0;
+  function flashPieces() { piecesFlash = 1; }
+
+  // wobble trace
+  const scope = $('scope');
+  const sctx = scope.getContext('2d');
+  const trace = new Float32Array(240);
+  let traceHead = 0;
+  function drawScope() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = scope.clientWidth, h = scope.clientHeight;
+    if (!w) return;
+    if (scope.width !== Math.round(w * dpr)) { scope.width = Math.round(w * dpr); scope.height = Math.round(h * dpr); }
+    sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sctx.clearRect(0, 0, w, h);
+    sctx.strokeStyle = 'rgba(29,42,33,0.2)';
+    sctx.lineWidth = 1;
+    sctx.beginPath(); sctx.moveTo(0, h / 2 + 0.5); sctx.lineTo(w, h / 2 + 0.5); sctx.stroke();
+    sctx.strokeStyle = '#d8303f';
+    sctx.lineWidth = 1.4;
+    sctx.beginPath();
+    for (let i = 0; i < trace.length; i++) {
+      const v = trace[(traceHead + i) % trace.length];
+      const y = h / 2 - Math.max(-1, Math.min(1, v)) * (h / 2 - 2);
+      const xx = i / (trace.length - 1) * w;
+      if (i) sctx.lineTo(xx, y); else sctx.moveTo(xx, y);
+    }
+    sctx.stroke();
+  }
+
+  let frame = 0;
+  function updateReadouts() {
+    let vol = 0;
+    for (const pc of pieces) vol += meshVolume(pc.geo.attributes.position.array, pc.geo.index.array);
+    const cm3 = UNIT_CM ** 3;
+    const mass = restVolumeTotal * cm3 * DENSITY;
+    ui.mass.innerHTML = mass.toFixed(1) + '<small>g</small>';
+    ui.vol.innerHTML = (vol * cm3).toFixed(1) + '<small>cm³</small>';
+    const dv = (vol / restVolumeTotal - 1) * 100;
+    ui.dv.innerHTML = (dv >= 0 ? '+' : '−') + Math.abs(dv).toFixed(2) + '<small>%</small>';
+    ui.pieces.textContent = String(pieces.length);
+    ui.pieces.style.color = piecesFlash > 0.05 ? 'var(--melon)' : '';
+    const strain = stats.n ? stats.dev / stats.n / H * 100 : 0;
+    ui.strain.innerHTML = strain.toFixed(1) + '<small>%</small>';
+  }
+
+  // ---------------------------------------------------------------- frame loop
+  function resize() {
+    const w = window.innerWidth, h = window.innerHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    // keep the 20 cm slice comfortably in frame on narrow screens
+    orbit.radius = Math.max(10, 5.6 / (2 * camera.aspect * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))));
+    camera.updateProjectionMatrix();
+    updateCamera();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  setTool('press');
+  buildWorld();
+
+  let last = performance.now(), acc = 0, sagMean = 0;
+  function loop(now) {
+    requestAnimationFrame(loop);
+    const dt = Math.min((now - last) / 1000, 0.05);
+    last = now;
+    if (!paused) {
+      acc += dt;
+      let steps = 0;
+      while (acc >= DT && steps < 3) { step(); acc -= DT; steps++; }
+      if (steps === 3) acc = 0;
+      if (steps) {
+        // high-pass the squash signal so the trace shows oscillation, not resting sag
+        const sag = stats.n ? stats.sag / stats.n : 0;
+        sagMean += (sag - sagMean) * 0.04;
+        trace[traceHead] = (sag - sagMean) / (0.009 * H);
+        traceHead = (traceHead + 1) % trace.length;
+      }
+    }
+    for (const pc of pieces) deformPiece(pc);
+    updateSeeds();
+
+    // transparent pieces: draw far to near
+    const cp = camera.position;
+    const order = pieces.map((pc) => ({ pc, d: (pc.c[0] - cp.x) ** 2 + (pc.c[1] - cp.y) ** 2 + (pc.c[2] - cp.z) ** 2 }))
+      .sort((a, b) => b.d - a.d);
+    order.forEach((o, i) => { o.pc.mesh.renderOrder = i; });
+
+    // knife
+    const showKnife = (knifeActive() && pointerIn) || (action && action.type === 'knife');
+    knife.visible = !!showKnife;
+    if (showKnife) {
+      knifeState.y += (knifeState.yTarget - knifeState.y) * 0.3;
+      knife.position.set(knifeState.pos.x, knifeState.y, knifeState.pos.z);
+      knife.rotation.set(0, knifeState.angle, 0);
+    }
+    if (strokeFade > 0) {
+      strokeFade -= dt * 2.5;
+      strokeMat.opacity = Math.max(strokeFade, 0);
+      if (strokeFade <= 0) strokeLine.visible = false;
+    }
+    if (piecesFlash > 0) piecesFlash -= dt * 1.2;
+
+    if (++frame % 4 === 0) { updateReadouts(); drawScope(); }
+    renderer.render(scene, camera);
+  }
+  updateReadouts();
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
